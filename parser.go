@@ -31,10 +31,8 @@ type (
 	SectionName string
 	// Key is the type of the keys for INI fields
 	Key string
-	// Value is the type of the values part for INI fields
-	Value string
 	// Section is the type of values for sections in IniFile
-	Section map[Key]Value
+	Section map[Key]string
 )
 
 // IniFile is the type that represent INI file structure and methods
@@ -65,21 +63,21 @@ func (i IniFile) GetSectionNames () ([]SectionName) {
 // of type Key and return the Value associated with that key that has
 // type Value.
 // The function returns err == nil if the sections or 
-func (i IniFile) Get(sectionName SectionName, key Key) (Value, error) {
+func (i IniFile) Get(sectionName SectionName, key Key) (string, error) {
 	if i.sections == nil || i.sections[sectionName] == nil {
-		return Value(""), ErrNullReference
+		return "", ErrNullReference
 	}
 	if _, ok := i.sections[sectionName]; !ok {
-		return Value(""), ErrSectionNotExist
+		return "", ErrSectionNotExist
 	}
 	value, ok := i.sections[sectionName][key]
 	if !ok {
-		return Value(""), ErrKeyNotExist
+		return "", ErrKeyNotExist
 	}
 	return value, nil
 }
 
-func (i *IniFile) Set(sectionName SectionName, key Key, value Value) error{
+func (i *IniFile) Set(sectionName SectionName, key Key, value string) error{
 	if i.sections == nil || i.sections[sectionName] == nil {
 		return ErrNullReference
 	}
@@ -123,10 +121,10 @@ func isSectionLine(line string, rSection *regexp.Regexp) bool {
 
 // ParseFieldLine is a helper function that get a line of string and
 // parses the line into key and value of type Key and Value respectivly
-func parseFieldLine(line string) (Key, Value) {
+func parseFieldLine(line string) (Key, string) {
 	keyAndValue := strings.Split(line, "=")
 	key := Key(strings.Trim(keyAndValue[0], " "))
-	value := Value(strings.Trim(keyAndValue[1], " "))
+	value := strings.Trim(keyAndValue[1], " ")
 	return key, value
 }
 

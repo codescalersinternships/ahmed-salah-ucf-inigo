@@ -6,12 +6,12 @@ import (
 )
 
 var mapOfSections = map[SectionName]Section{
-	SectionName("owner") : {Key("name") : Value("John Doe"),
-							Key("organization") : Value("Acme Inc.")},
+	SectionName("owner") : {Key("name") : "John Doe",
+							Key("organization") : "Acme Inc."},
 
-	SectionName("database") : {Key("server") : Value("192.0.2.62"),
-							   Key("port") : Value("143"),
-							   Key("file") : Value("\"payroll.dat\""),},
+	SectionName("database") : {Key("server") : "192.0.2.62",
+							   Key("port") : "143",
+							   Key("file") : "\"payroll.dat\"",},
 }
 
 var iniContent = `; last modified 1 April 2001 by John Doe
