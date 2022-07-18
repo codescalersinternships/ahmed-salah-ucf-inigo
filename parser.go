@@ -64,7 +64,7 @@ func (i IniFile) GetSectionNames () ([]SectionName) {
 // type Value.
 // The function returns err == nil if the sections or 
 func (i IniFile) Get(sectionName SectionName, key Key) (string, error) {
-	if i.sections == nil || i.sections[sectionName] == nil {
+	if i.sections == nil {
 		return "", ErrNullReference
 	}
 	if _, ok := i.sections[sectionName]; !ok {

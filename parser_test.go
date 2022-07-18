@@ -93,14 +93,35 @@ func TestGetSectionNames(t *testing.T) {
 	})
 }
 
-func TestLoadFromFile(t *testing.T) {
-	assertEqualStrings := func(t testing.TB, got, want string) {
-		t.Helper()
-		if (!reflect.DeepEqual(got, want)) {
-			t.Errorf("got %s want %s", got, want)
-		}
-	}
+func TestGet(t *testing.T) {
+	t.Run("get value crosponding to key in section", func(t *testing.T) {
+		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
+		got, _ := ini.Get(SectionName("owner"), Key("name"))
+		want := "salah"
+		
+		assertEqualStrings(t, got, want)
+	})
+	t.Run("nil sections", func(t *testing.T) {
+		ini := IniFile{}
+		_, err := ini.Get(SectionName("owner"), Key("name"))
+		
+		assertErrorMsg(t, err, ErrNullReference)
+	})
+	t.Run("section doesn't exist", func(t *testing.T) {
+		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
+		_, err := ini.Get(SectionName("employee"), Key("name"))
+		
+		assertErrorMsg(t, err, ErrSectionNotExist)
+	})
+	t.Run("key doesn't exist", func(t *testing.T) {
+		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
+		_, err := ini.Get(SectionName("owner"), Key("address"))
+		
+		assertErrorMsg(t, err, ErrKeyNotExist)
+	})
+}
 
+func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
 		filePath := "/mnt/sda5/CS/codescallers/ahmed-salah-ucf-inigo/example.ini"
 		ini := IniFile{}
@@ -159,6 +180,13 @@ func TestLoadFromString(t *testing.T) {
 
 		assertEqualSections(t, got, want)
 	})
+}
+
+func assertEqualStrings(t testing.TB, got, want string) {
+	t.Helper()
+	if (!reflect.DeepEqual(got, want)) {
+		t.Errorf("got %s want %s", got, want)
+	}
 }
 
 func assertEqualSections(t testing.TB, got, want map[SectionName]Section) {
