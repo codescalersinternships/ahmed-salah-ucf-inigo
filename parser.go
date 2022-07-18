@@ -121,16 +121,6 @@ func isSectionLine(line string, rSection *regexp.Regexp) bool {
 	return rSection.MatchString(line)
 }
 
-// getSectionName is a helper function that get a line of string and
-// a regexp pattern `\[.*?\]` that matches it and return the section name
-func getSectionName(line string, rSection *regexp.Regexp) string {
-	sectionName := rSection.FindString(line)
-	sectionName = strings.TrimLeft(sectionName, " [")
-	sectionName = strings.TrimRight(sectionName, " ]")
-
-	return sectionName
-}
-
 // ParseFieldLine is a helper function that get a line of string and
 // parses the line into key and value of type Key and Value respectivly
 func parseFieldLine(line string) (Key, Value) {
@@ -159,7 +149,9 @@ func (i IniFile) LoadFromString(iniData string) error {
 			if isCommentLine(line) {
 				continue
 			} else if isSectionLine(line, rSection) {
-				sectionName = getSectionName(line, rSection)
+				sectionName = rSection.FindString(line)
+				sectionName = strings.TrimLeft(sectionName, " [")
+				sectionName = strings.TrimRight(sectionName, " ]")
 				i.sections[SectionName(sectionName)] = Section{}
 			} else {
 				key, value := parseFieldLine(line)
