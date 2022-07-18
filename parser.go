@@ -15,6 +15,10 @@ var (
 	ErrKeyNotExist = IniParserError("the key you tried to access doesn't exist")
 )
 
+var (
+	rSection, _ = regexp.Compile(`\[.*?\]`)
+)
+
 type IniParserError string
 
 func (e IniParserError) Error() string {
@@ -91,13 +95,6 @@ func (i *IniFile) Set(sectionName SectionName, key Key, value Value) error{
 	return nil
 }
 
-func (i IniFile) ToString() string {
-	var iniString string
-	for sectionName, section := range i.sections {
-		
-	}
-}
-
 // LoadFromFile get filePath as argument and returns the file content as a string
 // A successful call returns err == nil, and non-successful call returns an error
 // of type ErrInvalidFilePath
@@ -153,7 +150,6 @@ func (i IniFile) LoadFromString(iniData string) error {
 	if i.sections == nil {
 		return ErrNullReference
 	}
-	rSection, _ := regexp.Compile(`\[.*?\]`)
 	dataLines := strings.Split(iniData, "\n")
 	var sectionName string
 	
