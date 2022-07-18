@@ -1,4 +1,4 @@
-// Package INIParser provides functionality for parsing INI file in Go.
+// Package INIParser provides functionality for parsing INI format in Go.
 package INIParser
 
 import (
@@ -62,7 +62,10 @@ func (i IniFile) GetSectionNames () ([]SectionName) {
 // Get function gets the section name of type SectionName and the key
 // of type Key and return the Value associated with that key that has
 // type Value.
-// The function returns err == nil if the sections or 
+// The function returns err == nil if the returned successfully.
+// 						err == ErrNullReference if sections is not defined.
+// 						err == ErrSectionNotExist if no section with name sectionName.
+// 						err == ErrKeyNotExist if no key with name key.
 func (i IniFile) Get(sectionName SectionName, key Key) (string, error) {
 	if i.sections == nil {
 		return "", ErrNullReference

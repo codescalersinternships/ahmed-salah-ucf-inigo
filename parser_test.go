@@ -203,6 +203,6 @@ func assertErrorMsg(t testing.TB, err, want error) {
 	}
 
 	if err.Error() != want.Error() {
-		t.Errorf("got %s want %s", err.Error(), want)
+		t.Errorf("got %q want %q", err.Error(), want)
 	}
 }
