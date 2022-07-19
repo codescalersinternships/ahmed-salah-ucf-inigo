@@ -34,10 +34,28 @@ server = 192.0.2.62
 port = 143
 file = "payroll.dat"`
 
+var iniGlobalContent = `; last modified 1 April 2001 by John Doe
+name = John Doe
+[owner]
+organization = Acme Inc.
+
+[database]
+; use IP address in case network name resolution is not working
+server = 192.0.2.62
+port = 143
+file = "payroll.dat"`
+
 var ExampleIniContent = `[owner]
 name = John Doe
 
 [database]
+server = 192.0.2.62
+`
+
+var iniErrGlobalProperity = `[owner]
+name = John Doe
+
+[]
 server = 192.0.2.62
 `
 
@@ -224,11 +242,6 @@ func TestLoadFromFile(t *testing.T) {
 
 		assertErrorMsg(t, err, ErrInvalidFilePath)
 	})
-
-	t.Run("invalid ini file syntax", func(t *testing.T) { // TO-Do
-		
-	})
-
 }
 
 func ExampleIniParser_LoadFromFile() {
@@ -241,37 +254,68 @@ func ExampleIniParser_LoadFromFile() {
 }
 
 func TestLoadFromString(t *testing.T) {
-	t.Run("nil sections", func(t *testing.T) {
-		data := iniContent
-
-		ini := IniParser{}
-		err := ini.LoadFromString(data)
-
-		assertErrorMsg(t, err, ErrNullReference)
-	})
-	t.Run("spaces trimming", func(t *testing.T) {
-		data := spacedIniContent
-
+	t.Run("input empty string", func(t *testing.T) {
 		ini := New()
-		err := ini.LoadFromString(data)
-		got := ini.GetSections()
-		want := mapOfSections
-
+		err := ini.LoadFromString("")
+		got := ini.sections
+		want := map[SectionName]Section{}
+		
 		assertNoErrorMsg(t, err)
 		assertEqualSections(t, got, want)
 	})
 
-	t.Run("empty lines", func(t *testing.T) {
-		data := emptyLinesIniContent
-
-		ini := IniParser{sections: map[SectionName]Section{}}
-		err := ini.LoadFromString(data)
-		got := ini.GetSections()
+	t.Run("success parse", func(t *testing.T) {
+		ini := New()
+		err := ini.LoadFromString(iniContent)
+		got := ini.sections
 		want := mapOfSections
-
+		
 		assertNoErrorMsg(t, err)
-		assertEqualSections(t, got, want)
+		assertEqualSections(t, got, want)	
 	})
+
+	t.Run("data contain global content", func(t *testing.T) {
+		ini := New()
+		err := ini.LoadFromString(iniGlobalContent)
+		
+		assertErrorMsg(t, err, ErrGlobalProperity)
+	})
+
+	t.Run("empty section name", func(t *testing.T) {
+		ini := New()
+		err := ini.LoadFromString(iniErrGlobalProperity)
+		
+		assertErrorMsg(t, err, ErrEmptySectionName)
+	})
+
+	t.Run("properity with missed key", func(t *testing.T) {
+		ini := New()
+		err := ini.LoadFromString("[owner]\n=value")
+		
+		assertErrorMsg(t, err, ErrEmptyKey)
+	})
+
+	var testsSpaces = []string{"[owner      ]\nname=salah",
+								"[     owner    ]\nname=salah",
+								"     [owner    ]    \nname=salah",
+								"[owner]\nname    =salah",
+								"[owner]\nname    =salah    ",
+								"[owner]\n     name    =salah"}
+	var contentNoSpaces = "[owner]\nname=salah"
+
+	for _, tt := range testsSpaces {
+		t.Run("trim spaces", func(t *testing.T) {
+			ini := New()
+			ini.LoadFromString(tt)
+			got := ini.sections
+
+			newIni := New()
+			newIni.LoadFromString(contentNoSpaces)
+			want := newIni.sections
+
+			assertEqualSections(t, got, want)
+		})
+	}
 }
 
 func ExampleIniParser_LoadFromString() {

@@ -4,14 +4,16 @@ package iniparser
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
-	"unicode/utf8"
 )
 
-var (
-	rSection, _ = regexp.Compile(`\[.*?\]`)
+const (
+	sectionLine = "sectionLine"
+	propertyLine = "properityLine"
+	commentLine = "commentLine"
+	emptyLine = "emptyLine"
+	unsportedLine = "unsportedLine"
 )
 
 var (
@@ -20,6 +22,11 @@ var (
 	ErrSectionNotExist = IniParserError("the section you tried to access doesn't exist")
 	ErrKeyNotExist = IniParserError("the key you tried to access doesn't exist")
 	ErrHasNoData = IniParserError("there is no data yet, you may didn't load data")
+	ErrGlobalProperity = IniParserError("global keys are not allowed")
+	ErrEmptySectionName = IniParserError("you should provide sectionName")
+	ErrSyntaxError = IniParserError("syntax error, can't understand this line")
+	ErrEmptyKey = IniParserError("you should provide key for the properity")
+
 )
 
 type IniParserError string
@@ -39,6 +46,8 @@ type (
 )
 
 // IniParser is the type that represent INI file structure and methods
+// INI content is represented as a map in which keys are section names
+// and values are maps of keys and values from the ini properties.
 type IniParser struct {
 	sections map[SectionName]Section
 }
@@ -113,30 +122,105 @@ func (i *IniParser) LoadFromFile(filePath string) (string, error) {
 	if err != nil {
 		return "", ErrInvalidFilePath
 	}
+	i.sections, err = parse(string(fileContent))
 	return string(fileContent), err
 }
 
-// isCommentLine is a helper predicate that takes a line of string
-// and determine if this line is INI comment or not
-func isCommentLine(line string) bool {
-	firstCharachter, _ := utf8.DecodeRuneInString(line[0:])
-	return firstCharachter == ';'
+func isSection(line string) bool {
+
+	line = strings.TrimSpace(line)
+
+	return line[0] == '[' && line[len(line)-1] == ']' &&
+			strings.Count(line, "[") == 1 && strings.Count(line, "]") == 1
 }
 
-// isSectionLine is a helper predicate that takes a line of string
-// and determine if this line is INI section or not
-func isSectionLine(line string, rSection *regexp.Regexp) bool {
+func isProperity(line string) bool {
+	return strings.Count(line, "=") == 1
+}
+
+func isComment(line string) bool {
+	return line[0] == ';'
+}
+
+func isEmptyLine(line string) bool {
+	return len(line) == 0 || line[0] == '\n'
+}
+
+func lineType(line string) string {
+	if isEmptyLine(line) {
+		return emptyLine
+	}
+	if isSection(line) {
+		return sectionLine
+	}
+	if isProperity(line) {
+		return propertyLine
+	}
+	if isComment(line){
+		return commentLine
+	}
 	
-	return rSection.MatchString(line)
+	return unsportedLine
 }
 
-// ParseFieldLine is a helper function that get a line of string and
-// parses the line into key and value of type Key and Value respectivly
-func parseFieldLine(line string) (Key, string) {
-	keyAndValue := strings.Split(line, "=")
-	key := Key(strings.Trim(keyAndValue[0], " "))
-	value := strings.Trim(keyAndValue[1], " ")
-	return key, value
+func parseSection(sectionLine string) (SectionName, error) {
+	if len(sectionLine) == 2 {
+		return "", ErrEmptySectionName
+	}
+	sectionName := strings.TrimLeft(sectionLine[1:len(sectionLine)-1], " [")
+	sectionName = strings.TrimRight(sectionName, " ]")
+	return SectionName(sectionName), nil
+}
+
+func parseProperity(property string) (Key, string, error) {
+	sepIdx := strings.Index(property, "=")
+	key := property[0:sepIdx]
+	if len(key) == 0 {
+		return Key(""), "", ErrEmptyKey
+	}
+	key = strings.TrimSpace(key)
+	value := property[sepIdx+1:]
+	value = strings.TrimSpace(value)
+
+	return Key(key), value, nil
+}
+
+func parse(iniData string) (map[SectionName]Section, error) {
+	ini := New()
+	var currentSectionName SectionName
+	var key Key
+	var value string
+	var err error
+
+	dataLines := strings.Split(iniData, "\n")
+
+	for _, line := range dataLines {
+		lineType := lineType(line)
+		switch lineType {
+		case sectionLine:
+			currentSectionName, err = parseSection(line)
+			if err != nil {
+				return 	ini.sections, err
+			}
+			ini.sections[currentSectionName] = Section{}
+		case propertyLine:
+			key, value, err = parseProperity(line)
+			if err != nil {
+				return ini.sections, err
+			}
+			if currentSectionName == "" {
+				return ini.sections, ErrGlobalProperity
+			}
+			ini.sections[currentSectionName][key] = value
+		case commentLine:
+		case emptyLine:
+			continue
+
+		case unsportedLine:
+			return ini.sections, ErrSyntaxError
+		}
+	}
+	return ini.sections, nil
 }
 
 // LoadFromString takes iniData of type string as argument
@@ -145,30 +229,10 @@ func parseFieldLine(line string) (Key, string) {
 // of type map[SectionName]Section.
 // the function returns ErrNullReference error if the user tried
 // to Load INI data into IniParser that has sections undefined.
-func (i *IniParser) LoadFromString(iniData string) error {
-	if i.sections == nil {
-		return ErrNullReference
-	}
-	dataLines := strings.Split(iniData, "\n")
-	var sectionName string
+func (i *IniParser) LoadFromString(iniData string) (err error) {
+	i.sections, err = parse(iniData)
 	
-	for _, line := range dataLines {
-		if len(line) > 0 {
-			line = strings.Trim(line, " ")
-			if isCommentLine(line) {
-				continue
-			} else if isSectionLine(line, rSection) {
-				sectionName = rSection.FindString(line)
-				sectionName = strings.TrimLeft(sectionName, " [")
-				sectionName = strings.TrimRight(sectionName, " ]")
-				i.sections[SectionName(sectionName)] = Section{}
-			} else {
-				key, value := parseFieldLine(line)
-				i.sections[SectionName(sectionName)][key] = value
-			}
-		}
-	}
-	return nil
+	return err
 }
 
 func (i *IniParser) String() (string, error) {
