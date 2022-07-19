@@ -5,35 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 )
-
-const (
-	sectionLine = "sectionLine"
-	propertyLine = "properityLine"
-	commentLine = "commentLine"
-	emptyLine = "emptyLine"
-	unsportedLine = "unsportedLine"
-)
-
-var (
-	ErrInvalidFilePath = IniParserError("couldn't find the file in the path you provided")
-	ErrNullReference = IniParserError("you tried to access object that doesn't exist")
-	ErrSectionNotExist = IniParserError("the section you tried to access doesn't exist")
-	ErrKeyNotExist = IniParserError("the key you tried to access doesn't exist")
-	ErrHasNoData = IniParserError("there is no data yet, you may didn't load data")
-	ErrGlobalProperity = IniParserError("global keys are not allowed")
-	ErrEmptySectionName = IniParserError("you should provide sectionName")
-	ErrSyntaxError = IniParserError("syntax error, can't understand this line")
-	ErrEmptyKey = IniParserError("you should provide key for the properity")
-
-)
-
-type IniParserError string
-
-func (e IniParserError) Error() string {
-	return string(e)
-}
 
 
 type (
@@ -55,6 +27,30 @@ type IniParser struct {
 // New function create new IniParser object and return it.
 func New() *IniParser{
 	return &IniParser{map[SectionName]Section{}}
+}
+
+// LoadFromString takes iniData of type string as argument
+// and loads the data into the object's sections field.
+// The function returns err == ErrGlobalProperity if file contains global properties.
+//				err == ErrEmptySectionName if section line has no name [].
+// 
+func (i *IniParser) LoadFromString(iniData string) (err error) {
+	i.sections, err = parse(iniData)
+	
+	return err
+}
+
+// LoadFromFile get filePath as argument and returns the file content as a string
+// A successful call returns err == nil, and non-successful call returns an error
+// of type ErrInvalidFilePath
+func (i *IniParser) LoadFromFile(filePath string) (string, error) {
+	
+	fileContent, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", ErrInvalidFilePath
+	}
+	i.sections, err = parse(string(fileContent))
+	return string(fileContent), err
 }
 
 
@@ -80,9 +76,9 @@ func (i *IniParser) GetSectionNames () ([]string) {
 // of type Key and return the Value associated with that key that has
 // type Value.
 // The function returns err == nil if the returned successfully.
-// 						err == ErrNullReference if sections is not defined.
-// 						err == ErrSectionNotExist if no section with name sectionName.
-// 						err == ErrKeyNotExist if no key with name key.
+// 				err == ErrNullReference if sections is not defined.
+// 				err == ErrSectionNotExist if no section with name sectionName.
+// 				err == ErrKeyNotExist if no key with name key.
 func (i *IniParser) Get(sectionName SectionName, key Key) (string, error) {
 	if i.sections == nil {
 		return "", ErrNullReference
@@ -111,128 +107,6 @@ func (i *IniParser) Set(sectionName SectionName, key Key, value string) error{
 
 	i.sections[sectionName][key] = value
 	return nil
-}
-
-// LoadFromFile get filePath as argument and returns the file content as a string
-// A successful call returns err == nil, and non-successful call returns an error
-// of type ErrInvalidFilePath
-func (i *IniParser) LoadFromFile(filePath string) (string, error) {
-	
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", ErrInvalidFilePath
-	}
-	i.sections, err = parse(string(fileContent))
-	return string(fileContent), err
-}
-
-func isSection(line string) bool {
-
-	line = strings.TrimSpace(line)
-
-	return line[0] == '[' && line[len(line)-1] == ']' &&
-			strings.Count(line, "[") == 1 && strings.Count(line, "]") == 1
-}
-
-func isProperity(line string) bool {
-	return strings.Count(line, "=") == 1
-}
-
-func isComment(line string) bool {
-	return line[0] == ';'
-}
-
-func isEmptyLine(line string) bool {
-	return len(line) == 0 || line[0] == '\n'
-}
-
-func lineType(line string) string {
-	if isEmptyLine(line) {
-		return emptyLine
-	}
-	if isSection(line) {
-		return sectionLine
-	}
-	if isProperity(line) {
-		return propertyLine
-	}
-	if isComment(line){
-		return commentLine
-	}
-	
-	return unsportedLine
-}
-
-func parseSection(sectionLine string) (SectionName, error) {
-	if len(sectionLine) == 2 {
-		return "", ErrEmptySectionName
-	}
-	sectionName := strings.TrimLeft(sectionLine[1:len(sectionLine)-1], " [")
-	sectionName = strings.TrimRight(sectionName, " ]")
-	return SectionName(sectionName), nil
-}
-
-func parseProperity(property string) (Key, string, error) {
-	sepIdx := strings.Index(property, "=")
-	key := property[0:sepIdx]
-	if len(key) == 0 {
-		return Key(""), "", ErrEmptyKey
-	}
-	key = strings.TrimSpace(key)
-	value := property[sepIdx+1:]
-	value = strings.TrimSpace(value)
-
-	return Key(key), value, nil
-}
-
-func parse(iniData string) (map[SectionName]Section, error) {
-	ini := New()
-	var currentSectionName SectionName
-	var key Key
-	var value string
-	var err error
-
-	dataLines := strings.Split(iniData, "\n")
-
-	for _, line := range dataLines {
-		lineType := lineType(line)
-		switch lineType {
-		case sectionLine:
-			currentSectionName, err = parseSection(line)
-			if err != nil {
-				return 	ini.sections, err
-			}
-			ini.sections[currentSectionName] = Section{}
-		case propertyLine:
-			key, value, err = parseProperity(line)
-			if err != nil {
-				return ini.sections, err
-			}
-			if currentSectionName == "" {
-				return ini.sections, ErrGlobalProperity
-			}
-			ini.sections[currentSectionName][key] = value
-		case commentLine:
-		case emptyLine:
-			continue
-
-		case unsportedLine:
-			return ini.sections, ErrSyntaxError
-		}
-	}
-	return ini.sections, nil
-}
-
-// LoadFromString takes iniData of type string as argument
-// and loads the data into the object's sections field.
-// It's the end-user responsibility to define the sections field
-// of type map[SectionName]Section.
-// the function returns ErrNullReference error if the user tried
-// to Load INI data into IniParser that has sections undefined.
-func (i *IniParser) LoadFromString(iniData string) (err error) {
-	i.sections, err = parse(iniData)
-	
-	return err
 }
 
 func (i *IniParser) String() (string, error) {
