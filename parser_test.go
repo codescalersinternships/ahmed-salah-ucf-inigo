@@ -1,6 +1,7 @@
 package iniparser
 
 import (
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -115,7 +116,7 @@ func TestLoadFromFile(t *testing.T) {
 	})
 
 	t.Run("invalid file path", func(t *testing.T) {
-		filepath := "/invalid/file/path/example.ini"
+		filepath := filepath.Join("invalid", "file", "path")
 		ini := New()
 		_, err := ini.LoadFromFile(filepath)
 
