@@ -316,6 +316,27 @@ func TestLoadFromString(t *testing.T) {
 			assertEqualSections(t, got, want)
 		})
 	}
+
+	var testsSyntax = []struct {
+		testName string
+		content string
+	} {
+		{"missed section bracket", "owner]\nname=salah"},
+		{"multiple property sperators", "[owner]\nname====salah"},
+		{"not ini syntax", "{\"name\":\"John\"}"},
+	}
+	
+	// {"owner]\nname=salah", "[owner]\nname====salah", }
+	for _, tt := range testsSyntax {
+		t.Run("syntax error: " + tt.testName, func(t *testing.T) {
+			ini := New()
+			err := ini.LoadFromString(tt.content)
+
+			assertErrorMsg(t, err, ErrSyntaxError)
+		})
+	}
+
+	
 }
 
 func ExampleIniParser_LoadFromString() {
