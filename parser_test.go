@@ -153,7 +153,7 @@ func TestSet(t *testing.T) {
 
 func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
-		filePath := "/mnt/sda5/CS/codescallers/ahmed-salah-ucf-inigo/example.ini"
+		filePath := "./example.ini"
 		ini := IniParser{}
 
 		got, err := ini.LoadFromFile(filePath)
