@@ -63,7 +63,7 @@ file = "payroll.dat"`
 
 func TestGetSections(t *testing.T) {
 	t.Run("get sections", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 		ini.LoadFromString(iniContent)
 		got := ini.GetSections()
 		want := mapOfSections
@@ -94,7 +94,7 @@ func TestGetSectionNames(t *testing.T) {
 	})
 
 	t.Run("has sections", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 		ini.LoadFromString(iniContent)
 		got := ini.GetSectionNames()
 		want := []string{"database", "owner"}
@@ -163,7 +163,7 @@ func TestSet(t *testing.T) {
 
 func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 
 		got, err := ini.LoadFromFile(exampleFilePath)
 		want := iniContent
@@ -174,7 +174,7 @@ func TestLoadFromFile(t *testing.T) {
 
 	t.Run("invalid file path", func(t *testing.T) {
 		filepath := "/invalid/file/path/example.ini"
-		ini := NewIniParser()
+		ini := New()
 		_, err := ini.LoadFromFile(filepath)
 
 		assertErrorMsg(t, err, ErrInvalidFilePath)
@@ -198,7 +198,7 @@ func TestLoadFromString(t *testing.T) {
 	t.Run("spaces trimming", func(t *testing.T) {
 		data := spacedIniContent
 
-		ini := NewIniParser()
+		ini := New()
 		err := ini.LoadFromString(data)
 		got := ini.GetSections()
 		want := mapOfSections
@@ -230,14 +230,14 @@ func TestString(t *testing.T) {
 		assertEqualStrings(t, got, want)
 	})
 	t.Run("has no data yet", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 		got, err := ini.String()
 		want := ""
 		assertErrorMsg(t, err, ErrHasNoData)
 		assertEqualStrings(t, got, want)
 	})
 	t.Run("has data", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 		ini.LoadFromString(iniContent)
 		got := ini.sections
 		stringContent, err := ini.String()
@@ -251,7 +251,7 @@ func TestString(t *testing.T) {
 
 func TestSaveToFile(t *testing.T) {
 	t.Run("successful saving", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 		ini.LoadFromString(iniContent)
 		got := ini.SaveToFile(successOutFilePath)
 		oldContentSectionsMap := ini.sections
@@ -270,7 +270,7 @@ func TestSaveToFile(t *testing.T) {
 		assertErrorMsg(t, got, ErrNullReference)
 	})
 	t.Run("has no data", func(t *testing.T) {
-		ini := NewIniParser()
+		ini := New()
 		got := ini.SaveToFile(failOutFilePath)
 		oldContentSectionsMap := ini.sections
 		strContent, _ := ini.LoadFromFile(failOutFilePath)
