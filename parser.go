@@ -182,7 +182,7 @@ func (i *IniParser) String() (string, error) {
 	for SectionName, section := range i.sections {
 		result += fmt.Sprintf("[%s]\n", SectionName)
 		for name, value := range section {
-			result += fmt.Sprintf("%s = %s\n", name, value)
+			result += fmt.Sprintf("%v = %s\n", name, value)
 		}
 		
 	}

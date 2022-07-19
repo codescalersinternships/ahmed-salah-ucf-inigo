@@ -2,6 +2,7 @@ package iniparser
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -28,6 +29,10 @@ file = "payroll.dat"`
 var iniContentNoComments = `[owner]
 name = John Doe
 organization = Acme Inc.
+[database]
+server = 192.0.2.62
+port = 143
+file = "payroll.dat"
 `
 
 var spacedIniContent = `; last modified 1 April 2001 by John Doe
@@ -237,17 +242,19 @@ func TestString(t *testing.T) {
 	t.Run("has data", func(t *testing.T) {
 		ini := NewIniParser()
 		ini.LoadFromString(iniContentNoComments)
-		got, err := ini.String()
-		want := iniContentNoComments
+		got := ini.sections
+		stringContent, err := ini.String()
+		ini.LoadFromString(stringContent)
+		want := ini.sections
 		
 		assertNoErrorMsg(t, err)
-		assertEqualStrings(t, got, want)
+		assertEqualSections(t, got, want)
 	})
 }
 
 func assertEqualStrings(t testing.TB, got, want string) {
 	t.Helper()
-	if (!reflect.DeepEqual(got, want)) {
+	if (!strings.EqualFold(got, want)) {
 		t.Errorf("got %s want %s", got, want)
 	}
 }
