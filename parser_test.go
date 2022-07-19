@@ -1,4 +1,4 @@
-package INIParser
+package iniparser
 
 import (
 	"reflect"

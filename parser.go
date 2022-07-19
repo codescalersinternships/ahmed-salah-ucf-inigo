@@ -1,5 +1,5 @@
 // Package INIParser provides functionality for parsing INI format in Go.
-package INIParser
+package iniparser
 
 import (
 	"os"
@@ -42,14 +42,14 @@ type IniFile struct {
 
 
 // GetSections return map of sections
-func (i IniFile) GetSections() (sections map[SectionName]Section) {
+func (i *IniFile) GetSections() (sections map[SectionName]Section) {
 	sections = i.sections
 	return
 }
 
 // GetSectionNames is a function that returns a slice
 // of all section names in the IniFile object
-func (i IniFile) GetSectionNames () ([]SectionName) {
+func (i *IniFile) GetSectionNames () ([]SectionName) {
 	sectionNamesList := []SectionName{}
 	for sectionName := range i.sections {
 		sectionNamesList = append(sectionNamesList, sectionName)
@@ -66,7 +66,7 @@ func (i IniFile) GetSectionNames () ([]SectionName) {
 // 						err == ErrNullReference if sections is not defined.
 // 						err == ErrSectionNotExist if no section with name sectionName.
 // 						err == ErrKeyNotExist if no key with name key.
-func (i IniFile) Get(sectionName SectionName, key Key) (string, error) {
+func (i *IniFile) Get(sectionName SectionName, key Key) (string, error) {
 	if i.sections == nil {
 		return "", ErrNullReference
 	}
@@ -99,7 +99,7 @@ func (i *IniFile) Set(sectionName SectionName, key Key, value string) error{
 // LoadFromFile get filePath as argument and returns the file content as a string
 // A successful call returns err == nil, and non-successful call returns an error
 // of type ErrInvalidFilePath
-func (i IniFile) LoadFromFile(filePath string) (string, error) {
+func (i *IniFile) LoadFromFile(filePath string) (string, error) {
 	
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
@@ -137,7 +137,7 @@ func parseFieldLine(line string) (Key, string) {
 // of type map[SectionName]Section.
 // the function returns ErrNullReference error if the user tried
 // to Load INI data into IniFile that has sections undefined.
-func (i IniFile) LoadFromString(iniData string) error {
+func (i *IniFile) LoadFromString(iniData string) error {
 	if i.sections == nil {
 		return ErrNullReference
 	}
