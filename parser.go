@@ -81,7 +81,7 @@ func (i *IniFile) Get(sectionName SectionName, key Key) (string, error) {
 }
 
 func (i *IniFile) Set(sectionName SectionName, key Key, value string) error{
-	if i.sections == nil || i.sections[sectionName] == nil {
+	if i.sections == nil {
 		return ErrNullReference
 	}
 	if _, ok := i.sections[sectionName]; !ok {
