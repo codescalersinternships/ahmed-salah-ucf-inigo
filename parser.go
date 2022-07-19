@@ -11,15 +11,15 @@ import (
 )
 
 var (
+	rSection, _ = regexp.Compile(`\[.*?\]`)
+)
+
+var (
 	ErrInvalidFilePath = IniParserError("couldn't find the file in the path you provided")
 	ErrNullReference = IniParserError("you tried to access object that doesn't exist")
 	ErrSectionNotExist = IniParserError("the section you tried to access doesn't exist")
 	ErrKeyNotExist = IniParserError("the key you tried to access doesn't exist")
 	ErrHasNoData = IniParserError("there is no data yet, you may didn't load data")
-)
-
-var (
-	rSection, _ = regexp.Compile(`\[.*?\]`)
 )
 
 type IniParserError string

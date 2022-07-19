@@ -1,9 +1,16 @@
 package iniparser
 
 import (
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+)
+
+var (
+	failOutFilePath = filepath.Join(".", "failOutFile.ini")
+	successOutFilePath = filepath.Join(".", "successOutFile.ini")
+	exampleFilePath = filepath.Join(".", "example.ini")
 )
 
 var mapOfSections = map[SectionName]Section{
@@ -156,10 +163,9 @@ func TestSet(t *testing.T) {
 
 func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
-		filePath := "./example.ini"
 		ini := NewIniParser()
 
-		got, err := ini.LoadFromFile(filePath)
+		got, err := ini.LoadFromFile(exampleFilePath)
 		want := iniContent
 
 		assertNoErrorMsg(t, err)
@@ -247,9 +253,9 @@ func TestSaveToFile(t *testing.T) {
 	t.Run("successful saving", func(t *testing.T) {
 		ini := NewIniParser()
 		ini.LoadFromString(iniContent)
-		got := ini.SaveToFile("./successOutFile.ini")
+		got := ini.SaveToFile(successOutFilePath)
 		oldContentSectionsMap := ini.sections
-		strContent, _ := ini.LoadFromFile("./example.ini")
+		strContent, _ := ini.LoadFromFile(exampleFilePath)
 		ini.LoadFromString(strContent)
 		newContentSectionsMap := ini.sections
 
@@ -259,15 +265,15 @@ func TestSaveToFile(t *testing.T) {
 	})
 	t.Run("nil sections", func(t *testing.T) {
 		ini := IniParser{}
-		got := ini.SaveToFile("./failOutFile.ini")
+		got := ini.SaveToFile(failOutFilePath)
 		
 		assertErrorMsg(t, got, ErrNullReference)
 	})
 	t.Run("has no data", func(t *testing.T) {
 		ini := NewIniParser()
-		got := ini.SaveToFile("./failOutFile.ini")
+		got := ini.SaveToFile(failOutFilePath)
 		oldContentSectionsMap := ini.sections
-		strContent, _ := ini.LoadFromFile("./failOutFile")
+		strContent, _ := ini.LoadFromFile(failOutFilePath)
 		ini.LoadFromString(strContent)
 		newContentSectionsMap := ini.sections
 
