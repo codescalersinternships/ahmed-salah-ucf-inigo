@@ -4,6 +4,7 @@ package iniparser
 import (
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode/utf8"
 )
@@ -27,34 +28,34 @@ func (e IniParserError) Error() string {
 
 
 type (
-	// SectionName is the type of keys in sections map for IniFile struct
+	// SectionName is the type of keys in sections map for IniParser struct
 	SectionName string
 	// Key is the type of the keys for INI fields
 	Key string
-	// Section is the type of values for sections in IniFile
+	// Section is the type of values for sections in IniParser
 	Section map[Key]string
 )
 
-// IniFile is the type that represent INI file structure and methods
-type IniFile struct {
+// IniParser is the type that represent INI file structure and methods
+type IniParser struct {
 	sections map[SectionName]Section
 }
 
 
 // GetSections return map of sections
-func (i *IniFile) GetSections() (sections map[SectionName]Section) {
+func (i *IniParser) GetSections() (sections map[SectionName]Section) {
 	sections = i.sections
 	return
 }
 
 // GetSectionNames is a function that returns a slice
-// of all section names in the IniFile object
-func (i *IniFile) GetSectionNames () ([]SectionName) {
-	sectionNamesList := []SectionName{}
+// of all section names in the IniParser object
+func (i *IniParser) GetSectionNames () ([]string) {
+	sectionNamesList := []string{}
 	for sectionName := range i.sections {
-		sectionNamesList = append(sectionNamesList, sectionName)
+		sectionNamesList = append(sectionNamesList, string(sectionName))
 	}
-
+	sort.Strings(sectionNamesList)
 	return sectionNamesList
 }
 
@@ -66,7 +67,7 @@ func (i *IniFile) GetSectionNames () ([]SectionName) {
 // 						err == ErrNullReference if sections is not defined.
 // 						err == ErrSectionNotExist if no section with name sectionName.
 // 						err == ErrKeyNotExist if no key with name key.
-func (i *IniFile) Get(sectionName SectionName, key Key) (string, error) {
+func (i *IniParser) Get(sectionName SectionName, key Key) (string, error) {
 	if i.sections == nil {
 		return "", ErrNullReference
 	}
@@ -80,7 +81,7 @@ func (i *IniFile) Get(sectionName SectionName, key Key) (string, error) {
 	return value, nil
 }
 
-func (i *IniFile) Set(sectionName SectionName, key Key, value string) error{
+func (i *IniParser) Set(sectionName SectionName, key Key, value string) error{
 	if i.sections == nil {
 		return ErrNullReference
 	}
@@ -99,7 +100,7 @@ func (i *IniFile) Set(sectionName SectionName, key Key, value string) error{
 // LoadFromFile get filePath as argument and returns the file content as a string
 // A successful call returns err == nil, and non-successful call returns an error
 // of type ErrInvalidFilePath
-func (i *IniFile) LoadFromFile(filePath string) (string, error) {
+func (i *IniParser) LoadFromFile(filePath string) (string, error) {
 	
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
@@ -136,8 +137,8 @@ func parseFieldLine(line string) (Key, string) {
 // It's the end-user responsibility to define the sections field
 // of type map[SectionName]Section.
 // the function returns ErrNullReference error if the user tried
-// to Load INI data into IniFile that has sections undefined.
-func (i *IniFile) LoadFromString(iniData string) error {
+// to Load INI data into IniParser that has sections undefined.
+func (i *IniParser) LoadFromString(iniData string) error {
 	if i.sections == nil {
 		return ErrNullReference
 	}
