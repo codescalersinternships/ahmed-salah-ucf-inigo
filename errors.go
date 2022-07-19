@@ -8,8 +8,8 @@ var (
 	ErrHasNoData = IniParserError("there is no data yet, you may didn't load data")
 	ErrGlobalProperity = IniParserError("global keys are not allowed")
 	ErrEmptySectionName = IniParserError("you should provide sectionName")
-	ErrSyntaxError = IniParserError("syntax error, can't understand this line")
 	ErrEmptyKey = IniParserError("you should provide key for the properity")
+	ErrSyntaxError = IniParserError("syntax error, can't understand this line")
 )
 
 type IniParserError string

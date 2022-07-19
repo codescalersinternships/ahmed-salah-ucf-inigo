@@ -91,7 +91,6 @@ func TestLoadFromString(t *testing.T) {
 		{"not ini syntax", "{\"name\":\"John\"}", ErrSyntaxError},
 	}
 	
-	// {"owner]\nname=salah", "[owner]\nname====salah", }
 	for _, tt := range testsSyntax {
 		t.Run("syntax error: " + tt.testName, func(t *testing.T) {
 			ini := New()

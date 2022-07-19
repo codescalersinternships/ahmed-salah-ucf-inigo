@@ -32,8 +32,9 @@ func New() *IniParser{
 // LoadFromString takes iniData of type string as argument
 // and loads the data into the object's sections field.
 // The function returns err == ErrGlobalProperity if file contains global properties.
-//				err == ErrEmptySectionName if section line has no name [].
-// 
+//				err == ErrEmptySectionName if section line has no name i.e: [ ].
+// 				err == ErrEmptyKey if properity has no key
+// 				err == ErrSyntaxError if there is any unsupported format
 func (i *IniParser) LoadFromString(iniData string) (err error) {
 	i.sections, err = parse(iniData)
 	
@@ -93,6 +94,12 @@ func (i *IniParser) Get(sectionName SectionName, key Key) (string, error) {
 	return value, nil
 }
 
+
+// Set function get section name and key and value, and set the key in the
+// given section with given value.
+// It returns err == ErrNullReference if the user try to access undefined sections
+//		err == ErrSectionNotExist if the sectionName doesn't exist
+//		err == ErrKeyNotExist if the key doesn't exist
 func (i *IniParser) Set(sectionName SectionName, key Key, value string) error{
 	if i.sections == nil {
 		return ErrNullReference
@@ -109,6 +116,8 @@ func (i *IniParser) Set(sectionName SectionName, key Key, value string) error{
 	return nil
 }
 
+// String function converts the IniParser object into string type
+// and returns that string.
 func (i *IniParser) String() (string, error) {
 	if (i.sections == nil) {
 		return "", ErrNullReference
@@ -127,6 +136,8 @@ func (i *IniParser) String() (string, error) {
 	return result, nil
 }
 
+// SaveToFile get filePath and save the data in sections
+// field into the file at that filePath.
 func (i *IniParser) SaveToFile(filePath string) error {
 	file, err := os.Create(filePath)
 	if err != nil{
