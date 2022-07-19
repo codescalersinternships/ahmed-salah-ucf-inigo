@@ -37,7 +37,7 @@ type (
 
 // IniFile is the type that represent INI file structure and methods
 type IniFile struct {
-	sections map[SectionName] Section
+	sections map[SectionName]Section
 }
 
 

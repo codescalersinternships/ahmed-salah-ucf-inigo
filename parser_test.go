@@ -88,7 +88,6 @@ func TestGetSectionNames(t *testing.T) {
 		ini := IniFile{sections: mapOfSections}
 		got := ini.GetSectionNames()
 		want := []SectionName{SectionName("owner"), SectionName("database")}
-
 		assertEqualLists(t, got, want)
 	})
 }
@@ -96,9 +95,10 @@ func TestGetSectionNames(t *testing.T) {
 func TestGet(t *testing.T) {
 	t.Run("get value crosponding to key in section", func(t *testing.T) {
 		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
-		got, _ := ini.Get(SectionName("owner"), Key("name"))
+		got, err := ini.Get(SectionName("owner"), Key("name"))
 		want := "salah"
 		
+		assertNoErrorMsg(t, err)
 		assertEqualStrings(t, got, want)
 	})
 	t.Run("nil sections", func(t *testing.T) {
@@ -121,6 +121,36 @@ func TestGet(t *testing.T) {
 	})
 }
 
+func TestSet(t *testing.T) {
+	t.Run("set value for key in section", func(t *testing.T) {
+		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
+		err := ini.Set(SectionName("owner"), Key("name"), "ahmed")
+		got, _ := ini.Get(SectionName("owner"), Key("name"))
+		want := "ahmed"
+		
+		assertNoErrorMsg(t, err)
+		assertEqualStrings(t, got, want)
+	})
+	t.Run("nil sections", func(t *testing.T) {
+		ini := IniFile{}
+		err := ini.Set(SectionName("owner"), Key("name"), "salah")
+		
+		assertErrorMsg(t, err, ErrNullReference)
+	})
+	t.Run("section doesn't exist", func(t *testing.T) {
+		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
+		err := ini.Set(SectionName("employee"), Key("name"), "salah")
+		
+		assertErrorMsg(t, err, ErrSectionNotExist)
+	})
+	t.Run("key doesn't exist", func(t *testing.T) {
+		ini := IniFile{sections: map[SectionName]Section{SectionName("owner") : {"name" : "salah"}}}
+		err := ini.Set(SectionName("owner"), Key("address"), "mahalla")
+		
+		assertErrorMsg(t, err, ErrKeyNotExist)
+	})
+}
+
 func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
 		filePath := "/mnt/sda5/CS/codescallers/ahmed-salah-ucf-inigo/example.ini"
@@ -129,10 +159,7 @@ func TestLoadFromFile(t *testing.T) {
 		got, err := ini.LoadFromFile(filePath)
 		want := iniContent
 
-		if err != nil &&err.Error() == ErrInvalidFilePath.Error() {
-			t.Fatal("didn't expect to get an error.")
-		}
-
+		assertNoErrorMsg(t, err)
 		assertEqualStrings(t, got, want)
 	})
 
@@ -163,10 +190,11 @@ func TestLoadFromString(t *testing.T) {
 		data := spacedIniContent
 
 		ini := IniFile{sections: map[SectionName]Section{}}
-		ini.LoadFromString(data)
+		err := ini.LoadFromString(data)
 		got := ini.GetSections()
 		want := mapOfSections
 
+		assertNoErrorMsg(t, err)
 		assertEqualSections(t, got, want)
 	})
 
@@ -174,10 +202,11 @@ func TestLoadFromString(t *testing.T) {
 		data := emptyLinesIniContent
 
 		ini := IniFile{sections: map[SectionName]Section{}}
-		ini.LoadFromString(data)
+		err := ini.LoadFromString(data)
 		got := ini.GetSections()
 		want := mapOfSections
 
+		assertNoErrorMsg(t, err)
 		assertEqualSections(t, got, want)
 	})
 }
@@ -204,5 +233,12 @@ func assertErrorMsg(t testing.TB, err, want error) {
 
 	if err.Error() != want.Error() {
 		t.Errorf("got %q want %q", err.Error(), want)
+	}
+}
+
+func assertNoErrorMsg(t testing.TB, err error) {
+	t.Helper()
+	if err != nil {
+		t.Errorf("don't expect to get an error:%q", err.Error())
 	}
 }
