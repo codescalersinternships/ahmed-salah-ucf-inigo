@@ -25,6 +25,11 @@ server = 192.0.2.62
 port = 143
 file = "payroll.dat"`
 
+var iniContentNoComments = `[owner]
+name = John Doe
+organization = Acme Inc.
+`
+
 var spacedIniContent = `; last modified 1 April 2001 by John Doe
 [owner]
 name = John Doe
@@ -210,6 +215,33 @@ func TestLoadFromString(t *testing.T) {
 
 		assertNoErrorMsg(t, err)
 		assertEqualSections(t, got, want)
+	})
+}
+
+func TestString(t *testing.T) {
+	t.Run("nil sections", func(t *testing.T) {
+		ini := IniParser{}
+		got, err := ini.String()
+		want := ""
+
+		assertErrorMsg(t, err, ErrNullReference)
+		assertEqualStrings(t, got, want)
+	})
+	t.Run("has no data yet", func(t *testing.T) {
+		ini := NewIniParser()
+		got, err := ini.String()
+		want := ""
+		assertErrorMsg(t, err, ErrHasNoData)
+		assertEqualStrings(t, got, want)
+	})
+	t.Run("has data", func(t *testing.T) {
+		ini := NewIniParser()
+		ini.LoadFromString(iniContentNoComments)
+		got, err := ini.String()
+		want := iniContentNoComments
+		
+		assertNoErrorMsg(t, err)
+		assertEqualStrings(t, got, want)
 	})
 }
 

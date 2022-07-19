@@ -2,6 +2,7 @@
 package iniparser
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"sort"
@@ -14,6 +15,7 @@ var (
 	ErrNullReference = IniParserError("you tried to access object that doesn't exist")
 	ErrSectionNotExist = IniParserError("the section you tried to access doesn't exist")
 	ErrKeyNotExist = IniParserError("the key you tried to access doesn't exist")
+	ErrHasNoData = IniParserError("there is no data yet, you may didn't load data")
 )
 
 var (
@@ -167,5 +169,39 @@ func (i *IniParser) LoadFromString(iniData string) error {
 		}
 	}
 	return nil
+}
+
+func (i *IniParser) String() (string, error) {
+	if (i.sections == nil) {
+		return "", ErrNullReference
+	}
+	if len(i.sections) == 0 {
+		return "", ErrHasNoData
+	}
+	var result string
+	for SectionName, section := range i.sections {
+		result += fmt.Sprintf("[%s]\n", SectionName)
+		for name, value := range section {
+			result += fmt.Sprintf("%s = %s\n", name, value)
+		}
+		
+	}
+
+	return result, nil
+}
+
+func (i *IniParser) SaveToFile(filePath string) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		err = ErrInvalidFilePath
+	}
+	defer file.Close()
+
+	content, err1 := i.String()
+	if err1 == nil {
+		file.WriteString(content)
+		err = err1
+	}
+	return err
 }
 
