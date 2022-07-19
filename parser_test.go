@@ -55,7 +55,8 @@ file = "payroll.dat"`
 
 func TestGetSections(t *testing.T) {
 	t.Run("get sections", func(t *testing.T) {
-		ini := IniParser{sections: mapOfSections}
+		ini := NewIniParser()
+		ini.LoadFromString(iniContent)
 		got := ini.GetSections()
 		want := mapOfSections
 
@@ -85,7 +86,8 @@ func TestGetSectionNames(t *testing.T) {
 	})
 
 	t.Run("has sections", func(t *testing.T) {
-		ini := IniParser{sections: mapOfSections}
+		ini := NewIniParser()
+		ini.LoadFromString(iniContent)
 		got := ini.GetSectionNames()
 		want := []string{"database", "owner"}
 		assertEqualLists(t, got, want)
@@ -154,7 +156,7 @@ func TestSet(t *testing.T) {
 func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
 		filePath := "./example.ini"
-		ini := IniParser{}
+		ini := NewIniParser()
 
 		got, err := ini.LoadFromFile(filePath)
 		want := iniContent
@@ -165,7 +167,7 @@ func TestLoadFromFile(t *testing.T) {
 
 	t.Run("invalid file path", func(t *testing.T) {
 		filepath := "/invalid/file/path/example.ini"
-		ini := IniParser{sections: map[SectionName]Section{}}
+		ini := NewIniParser()
 		_, err := ini.LoadFromFile(filepath)
 
 		assertErrorMsg(t, err, ErrInvalidFilePath)
@@ -189,7 +191,7 @@ func TestLoadFromString(t *testing.T) {
 	t.Run("spaces trimming", func(t *testing.T) {
 		data := spacedIniContent
 
-		ini := IniParser{sections: map[SectionName]Section{}}
+		ini := NewIniParser()
 		err := ini.LoadFromString(data)
 		got := ini.GetSections()
 		want := mapOfSections

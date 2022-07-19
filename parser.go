@@ -41,6 +41,11 @@ type IniParser struct {
 	sections map[SectionName]Section
 }
 
+// NewIniParser function create new IniParser object and return it.
+func NewIniParser() IniParser{
+	return IniParser{map[SectionName]Section{}}
+}
+
 
 // GetSections return map of sections
 func (i *IniParser) GetSections() (sections map[SectionName]Section) {
