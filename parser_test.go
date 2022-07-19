@@ -1,6 +1,7 @@
 package iniparser
 
 import (
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -29,9 +30,16 @@ organization = Acme Inc.
 
 [database]
 ; use IP address in case network name resolution is not working
-server = 192.0.2.62     
+server = 192.0.2.62
 port = 143
 file = "payroll.dat"`
+
+var ExampleIniContent = `[owner]
+name = John Doe
+
+[database]
+server = 192.0.2.62
+`
 
 var spacedIniContent = `; last modified 1 April 2001 by John Doe
 [owner]
@@ -77,6 +85,16 @@ func TestGetSections(t *testing.T) {
 
 		assertEqualSections(t, got, nil)
 	})
+	
+}
+
+func ExampleIniParser_GetSections() {
+	ini := New()
+	stringContent, _ := ini.LoadFromFile(exampleFilePath)
+	ini.LoadFromString(stringContent)
+	sections := ini.GetSections()
+	fmt.Println(sections)
+	// Output: map[database:map[file:"payroll.dat" port:143 server:192.0.2.62] owner:map[name:John Doe organization:Acme Inc.]]
 }
 
 func TestGetSectionNames(t *testing.T) {
@@ -100,6 +118,15 @@ func TestGetSectionNames(t *testing.T) {
 		want := []string{"database", "owner"}
 		assertEqualLists(t, got, want)
 	})
+}
+
+func ExampleIniParser_GetSectionNames() {
+	ini := New()
+	stringContent, _ := ini.LoadFromFile(exampleFilePath)
+	ini.LoadFromString(stringContent)
+	sections := ini.GetSectionNames()
+	fmt.Println(sections)
+	// Output: [database owner]
 }
 
 func TestGet(t *testing.T) {
@@ -129,6 +156,15 @@ func TestGet(t *testing.T) {
 		
 		assertErrorMsg(t, err, ErrKeyNotExist)
 	})
+}
+
+func ExampleIniParser_Get() {
+	ini := New()
+	stringContent, _ := ini.LoadFromFile(exampleFilePath)
+	ini.LoadFromString(stringContent)
+	sections, _ := ini.Get("owner", "name")
+	fmt.Println(sections)
+	// Output: John Doe
 }
 
 func TestSet(t *testing.T) {
@@ -161,6 +197,15 @@ func TestSet(t *testing.T) {
 	})
 }
 
+func ExampleIniParser_Set() {
+	ini := New()
+	stringContent, _ := ini.LoadFromFile(exampleFilePath)
+	ini.LoadFromString(stringContent)
+	ini.Set("owner", "name", "salah")
+	fmt.Println(ini.sections["owner"]["name"])
+	// Output: salah
+}
+
 func TestLoadFromFile(t *testing.T) {
 	t.Run("valid file path", func(t *testing.T) {
 		ini := New()
@@ -184,6 +229,15 @@ func TestLoadFromFile(t *testing.T) {
 		
 	})
 
+}
+
+func ExampleIniParser_LoadFromFile() {
+	ini := New()
+
+	stringContent, _ := ini.LoadFromFile(exampleFilePath)
+	ini.LoadFromString(stringContent)
+	fmt.Println(ini.sections)
+	// output: map[database:map[file:"payroll.dat" port:143 server:192.0.2.62] owner:map[name:John Doe organization:Acme Inc.]]
 }
 
 func TestLoadFromString(t *testing.T) {
@@ -220,6 +274,13 @@ func TestLoadFromString(t *testing.T) {
 	})
 }
 
+func ExampleIniParser_LoadFromString() {
+	ini := New()
+	ini.LoadFromString(iniContent)
+	fmt.Println(ini.sections)
+	// Output: map[database:map[file:"payroll.dat" port:143 server:192.0.2.62] owner:map[name:John Doe organization:Acme Inc.]]
+}
+
 func TestString(t *testing.T) {
 	t.Run("nil sections", func(t *testing.T) {
 		ini := IniParser{}
@@ -247,6 +308,17 @@ func TestString(t *testing.T) {
 		assertNoErrorMsg(t, err)
 		assertEqualSections(t, got, want)
 	})
+}
+
+func ExampleIniParser_String() {
+	ini := New()
+	ini.LoadFromString(iniContent)
+	oldContentSectionsMap := ini.sections
+	stringContent, _ := ini.String()
+	ini.LoadFromString(stringContent)
+	newContentSectionsMap := ini.sections
+	fmt.Println(reflect.DeepEqual(oldContentSectionsMap, newContentSectionsMap))
+	// Output: true
 }
 
 func TestSaveToFile(t *testing.T) {
@@ -282,6 +354,16 @@ func TestSaveToFile(t *testing.T) {
 	})
 }
 
+func ExampleIniParser_SaveToFile() {
+	ini := New()
+	ini.SaveToFile(failOutFilePath)
+	oldContentSectionsMap := ini.sections
+	strContent, _ := ini.LoadFromFile(failOutFilePath)
+	ini.LoadFromString(strContent)
+	newContentSectionsMap := ini.sections
+	fmt.Println(reflect.DeepEqual(oldContentSectionsMap, newContentSectionsMap))
+	// Output: true
+}
 func assertEqualStrings(t testing.TB, got, want string) {
 	t.Helper()
 	if (!strings.EqualFold(got, want)) {

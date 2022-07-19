@@ -186,7 +186,6 @@ func (i *IniParser) String() (string, error) {
 		}
 		
 	}
-
 	return result, nil
 }
 
