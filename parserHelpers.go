@@ -14,31 +14,29 @@ func parse(iniData string) (map[SectionName]Section, error) {
 	dataLines := strings.Split(iniData, "\n")
 
 	for _, line := range dataLines {
-		if len(line) > 0 {
-			lineType := lineType(line)
-			switch lineType {
-			case sectionLine:
-				currentSectionName, err = parseSection(line)
-				if err != nil {
-					return 	ini.sections, err
-				}
-				ini.sections[currentSectionName] = Section{}
-			case propertyLine:
-				key, value, err = parseProperity(line)
-				if err != nil {
-					return ini.sections, err
-				}
-				if currentSectionName == "" {
-					return ini.sections, ErrGlobalProperity
-				}
-				ini.sections[currentSectionName][key] = value
-			case commentLine:
-			case emptyLine:
-				continue
-
-			case unsportedLine:
-				return ini.sections, ErrSyntaxError
+		lineType := lineType(line)
+		switch lineType {
+		case sectionLine:
+			currentSectionName, err = parseSection(line)
+			if err != nil {
+				return 	ini.sections, err
 			}
+			ini.sections[currentSectionName] = Section{}
+		case propertyLine:
+			key, value, err = parseProperity(line)
+			if err != nil {
+				return ini.sections, err
+			}
+			if currentSectionName == "" {
+				return ini.sections, ErrGlobalProperity
+			}
+			ini.sections[currentSectionName][key] = value
+		case commentLine:
+		case emptyLine:
+			continue
+
+		case unsportedLine:
+			return ini.sections, ErrSyntaxError
 		}
 	}
 	return ini.sections, nil
