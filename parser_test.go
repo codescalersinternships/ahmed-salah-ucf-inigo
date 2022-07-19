@@ -26,15 +26,6 @@ server = 192.0.2.62
 port = 143
 file = "payroll.dat"`
 
-var iniContentNoComments = `[owner]
-name = John Doe
-organization = Acme Inc.
-[database]
-server = 192.0.2.62
-port = 143
-file = "payroll.dat"
-`
-
 var spacedIniContent = `; last modified 1 April 2001 by John Doe
 [owner]
 name = John Doe
@@ -241,7 +232,7 @@ func TestString(t *testing.T) {
 	})
 	t.Run("has data", func(t *testing.T) {
 		ini := NewIniParser()
-		ini.LoadFromString(iniContentNoComments)
+		ini.LoadFromString(iniContent)
 		got := ini.sections
 		stringContent, err := ini.String()
 		ini.LoadFromString(stringContent)
@@ -249,6 +240,39 @@ func TestString(t *testing.T) {
 		
 		assertNoErrorMsg(t, err)
 		assertEqualSections(t, got, want)
+	})
+}
+
+func TestSaveToFile(t *testing.T) {
+	t.Run("successful saving", func(t *testing.T) {
+		ini := NewIniParser()
+		ini.LoadFromString(iniContent)
+		got := ini.SaveToFile("./successOutFile.ini")
+		oldContentSectionsMap := ini.sections
+		strContent, _ := ini.LoadFromFile("./example.ini")
+		ini.LoadFromString(strContent)
+		newContentSectionsMap := ini.sections
+
+		assertNoErrorMsg(t, got)
+		assertEqualSections(t, oldContentSectionsMap, newContentSectionsMap)
+
+	})
+	t.Run("nil sections", func(t *testing.T) {
+		ini := IniParser{}
+		got := ini.SaveToFile("./failOutFile.ini")
+		
+		assertErrorMsg(t, got, ErrNullReference)
+	})
+	t.Run("has no data", func(t *testing.T) {
+		ini := NewIniParser()
+		got := ini.SaveToFile("./failOutFile.ini")
+		oldContentSectionsMap := ini.sections
+		strContent, _ := ini.LoadFromFile("./failOutFile")
+		ini.LoadFromString(strContent)
+		newContentSectionsMap := ini.sections
+
+		assertErrorMsg(t, got, ErrHasNoData)
+		assertEqualSections(t, oldContentSectionsMap, newContentSectionsMap)
 	})
 }
 
@@ -269,7 +293,7 @@ func assertEqualSections(t testing.TB, got, want map[SectionName]Section) {
 func assertErrorMsg(t testing.TB, err, want error) {
 	t.Helper()
 	if err == nil {
-		t.Fatal("expected to get an error.")
+		t.Fatal("didn't get error, expected to get an error")
 	}
 
 	if err.Error() != want.Error() {

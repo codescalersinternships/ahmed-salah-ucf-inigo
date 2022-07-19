@@ -192,15 +192,19 @@ func (i *IniParser) String() (string, error) {
 
 func (i *IniParser) SaveToFile(filePath string) error {
 	file, err := os.Create(filePath)
-	if err != nil {
-		err = ErrInvalidFilePath
+	if err != nil{
+		file.Close()
+		return err
 	}
 	defer file.Close()
 
 	content, err1 := i.String()
-	if err1 == nil {
-		file.WriteString(content)
+	file.WriteString(content)
+	if err1 == ErrNullReference {
 		err = err1
+	} else if err1 == ErrHasNoData {
+		err = err1
+		file.WriteString(content)
 	}
 	return err
 }
