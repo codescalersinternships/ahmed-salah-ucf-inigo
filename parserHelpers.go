@@ -1,6 +1,7 @@
 package iniparser
 
 import (
+	"bufio"
 	"strings"
 )
 
@@ -10,10 +11,11 @@ func parse(iniData string) (map[SectionName]Section, error) {
 	var key Key
 	var value string
 	var err error
+	
+	scanner := bufio.NewScanner(strings.NewReader(iniData))
 
-	dataLines := strings.Split(iniData, "\n")
-
-	for _, line := range dataLines {
+	for scanner.Scan() {
+		line := scanner.Text()
 		lineType := lineType(line)
 		switch lineType {
 		case sectionLine:
