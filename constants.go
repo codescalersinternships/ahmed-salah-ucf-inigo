@@ -45,7 +45,7 @@ name = John Doe
 server = 192.0.2.62
 `
 
-var iniErrGlobalProperity = `[owner]
+var emptySectionNameIniContent = `[owner]
 name = John Doe
 
 []

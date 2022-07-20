@@ -18,16 +18,6 @@ func TestLoadFromString(t *testing.T) {
 		assertEqualSections(t, got, want)
 	})
 
-	t.Run("success parse", func(t *testing.T) {
-		ini := New()
-		err := ini.LoadFromString(iniContent)
-		got := ini.sections
-		want := mapOfSections
-		
-		assertNoErrorMsg(t, err)
-		assertEqualSections(t, got, want)	
-	})
-
 	t.Run("content with empty lines", func(t *testing.T) {
 		ini := New()
 		err := ini.LoadFromString(emptyLinesIniContent)
@@ -38,25 +28,14 @@ func TestLoadFromString(t *testing.T) {
 		assertEqualSections(t, got, want)	
 	})
 
-	t.Run("data contain global content", func(t *testing.T) {
+	t.Run("success parse", func(t *testing.T) {
 		ini := New()
-		err := ini.LoadFromString(iniGlobalContent)
+		err := ini.LoadFromString(iniContent)
+		got := ini.sections
+		want := mapOfSections
 		
-		assertErrorMsg(t, err, ErrGlobalProperity)
-	})
-
-	t.Run("empty section name", func(t *testing.T) {
-		ini := New()
-		err := ini.LoadFromString(iniErrGlobalProperity)
-		
-		assertErrorMsg(t, err, ErrEmptySectionName)
-	})
-
-	t.Run("properity with missed key", func(t *testing.T) {
-		ini := New()
-		err := ini.LoadFromString("[owner]\n=value")
-		
-		assertErrorMsg(t, err, ErrEmptyKey)
+		assertNoErrorMsg(t, err)
+		assertEqualSections(t, got, want)	
 	})
 
 	var testsSpaces = []string{"[owner      ]\nname=salah",
@@ -81,13 +60,19 @@ func TestLoadFromString(t *testing.T) {
 		})
 	}
 
+
 	var testsSyntax = []struct {
 		testName string
 		content string
 		testErr error
 	} {
-		{"missed section bracket", "owner]\nname=salah", ErrSyntaxError},
+		{"empty section name", emptySectionNameIniContent, ErrEmptySectionName},
 		{"empty section name with spaces", "[    ]", ErrEmptySectionName},
+
+		{"properity with missed key", "[owner]\n=value", ErrEmptyKey},
+		{"data contain global content", iniGlobalContent, ErrGlobalProperity},
+		
+		{"missed section bracket", "owner]\nname=salah", ErrSyntaxError},
 		{"multiple property sperators", "[owner]\nname====salah", ErrSyntaxError},
 		{"not ini syntax", "{\"name\":\"John\"}", ErrSyntaxError},
 	}
@@ -100,8 +85,6 @@ func TestLoadFromString(t *testing.T) {
 			assertErrorMsg(t, err, tt.testErr)
 		})
 	}
-
-	
 }
 
 func TestLoadFromFile(t *testing.T) {
