@@ -3,9 +3,9 @@ package iniparser
 import "path/filepath"
 
 var (
-	failOutFilePath = filepath.Join(".", "failOutFile.ini")
-	successOutFilePath = filepath.Join(".", "successOutFile.ini")
-	exampleFilePath = filepath.Join(".", "example.ini")
+	failOutFilePath = filepath.Join("failOutFile.ini")
+	successOutFilePath = filepath.Join("successOutFile.ini")
+	exampleFilePath = filepath.Join("example.ini")
 )
 
 const (
