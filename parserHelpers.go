@@ -78,7 +78,7 @@ func isComment(line string) bool {
 }
 
 func isEmptyLine(line string) bool {
-	return len(line) == 0 || line[0] == '\n'
+	return len(line) == 0
 }
 
 func parseSection(sectionLine string) (SectionName, error) {
