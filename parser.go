@@ -32,9 +32,9 @@ func New() *IniParser{
 // LoadFromString takes iniData of type string as argument
 // and loads the data into the object's sections field.
 // The function returns err == ErrGlobalProperity if file contains global properties.
-//				err == ErrEmptySectionName if section line has no name i.e: [ ].
-// 				err == ErrEmptyKey if properity has no key
-// 				err == ErrSyntaxError if there is any unsupported format
+//			err == ErrEmptySectionName if section line has no name i.e: [ ].
+// 			err == ErrEmptyKey if properity has no key
+// 			err == ErrSyntaxError if there is any unsupported format
 func (i *IniParser) LoadFromString(iniData string) (err error) {
 	i.sections, err = parse(iniData)
 	
@@ -77,9 +77,9 @@ func (i *IniParser) GetSectionNames () ([]string) {
 // of type Key and return the Value associated with that key that has
 // type Value.
 // The function returns err == nil if the returned successfully.
-// 				err == ErrNullReference if sections is not defined.
-// 				err == ErrSectionNotExist if no section with name sectionName.
-// 				err == ErrKeyNotExist if no key with name key.
+// 			err == ErrNullReference if sections is not defined.
+// 			err == ErrSectionNotExist if no section with name sectionName.
+// 			err == ErrKeyNotExist if no key with name key.
 func (i *IniParser) Get(sectionName SectionName, key Key) (string, error) {
 	if i.sections == nil {
 		return "", ErrNullReference
@@ -98,8 +98,8 @@ func (i *IniParser) Get(sectionName SectionName, key Key) (string, error) {
 // Set function get section name and key and value, and set the key in the
 // given section with given value.
 // It returns err == ErrNullReference if the user try to access undefined sections
-//		err == ErrSectionNotExist if the sectionName doesn't exist
-//		err == ErrKeyNotExist if the key doesn't exist
+// err == ErrSectionNotExist if the sectionName doesn't exist
+// err == ErrKeyNotExist if the key doesn't exist
 func (i *IniParser) Set(sectionName SectionName, key Key, value string) error{
 	if i.sections == nil {
 		return ErrNullReference
